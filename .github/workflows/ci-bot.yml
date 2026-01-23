@@ -1,34 +1,37 @@
-name: CI Bot Analyzer
+name: Apply CI Bot Fix
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types:
-      - completed
+  issue_comment:
+    types: [created]
 
 jobs:
-  analyze:
-    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+  apply-fix:
+    if: github.event.comment.body == '/fix'
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Download CI logs
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install bot client deps
         run: |
-          echo "Downloading logs..."
-          echo "${{ toJson(github.event.workflow_run) }}" > ci_logs.txt
+          python -m pip install --upgrade pip
+          pip install requests
 
-      - name: Send logs to AI CI Bot
+      - name: Trigger fix on AI CI Bot
         env:
           BOT_SERVER_URL: ${{ secrets.BOT_SERVER_URL }}
         run: |
-          curl -X POST $BOT_SERVER_URL/analyze \
+          curl -X POST $BOT_SERVER_URL/apply-fix \
           -H "Content-Type: application/json" \
           -d '{
-            "logs": "'"$(cat ci_logs.txt | sed 's/"/\\"/g')"'",
             "repo": "'"${{ github.repository }}"'",
-            "pr_number": "'"${{ github.event.workflow_run.pull_requests[0].number }}"'"
+            "pr_number": "'"${{ github.event.issue.number }}"'"
           }'
- 
