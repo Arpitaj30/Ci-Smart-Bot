@@ -1,17 +1,78 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+import logging
 
-app = FastAPI()
+from .bot_runner import handle_github_event
+from .logging_config import setup_logging
+
+# Setup logging
+setup_logging()
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="AI CI Fix Bot")
+
+@app.get("/health")
+def health():
+    return {"status": "running"}
 
 @app.get("/")
 def root():
-    return {"status": "CI/CD Smart Bot running"}
+    return {
+        "status": "running",
+        "endpoints": {
+            "health": "/health",
+            "webhook": "/github/webhook",
+            "docs": "/docs"
+        }
+    }
 
-@app.post("/webhook")
+@app.post("/github/webhook")
 async def github_webhook(request: Request):
-    payload = await request.json()
-    event = request.headers.get("X-GitHub-Event")
-
-    print("GitHub Event:", event)
-    print("Payload received")
-
-    return {"message": "Webhook received"}
+    """GitHub App webhook endpoint for workflow run events"""
+    try:
+        # Get event type from headers
+        event = request.headers.get("X-GitHub-Event")
+        
+        # Parse JSON payload
+        try:
+            payload = await request.json()
+        except Exception as e:
+            logger.warning(f"Invalid JSON payload: {str(e)}")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "Invalid JSON payload. Please send valid JSON data."
+                }
+            )
+        
+        # Validate event type
+        if not event:
+            logger.warning("No X-GitHub-Event header provided")
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "message": "Missing X-GitHub-Event header"
+                }
+            )
+        
+        logger.info(f"Received GitHub event: {event}")
+        
+        # Handle workflow_run and pull_request events
+        if event in ["workflow_run", "pull_request"]:
+            await handle_github_event(event, payload)
+            return {"status": "processed", "event": event}
+        else:
+            logger.info(f"Ignoring event type: {event}")
+            return {"status": "ignored", "event": event}
+    
+    except Exception as e:
+        logger.error(f"Error processing webhook: {str(e)}", exc_info=True)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "status": "error",
+                "message": "Internal server error"
+            }
+        )

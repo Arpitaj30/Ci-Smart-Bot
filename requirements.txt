@@ -1,9 +1,6 @@
-flask
-requests
-PyGithub
-torch
-transformers
-accelerate
 fastapi
 uvicorn
-# python-dotenv
+requests
+PyGithub
+python-dotenv
+pydantic
