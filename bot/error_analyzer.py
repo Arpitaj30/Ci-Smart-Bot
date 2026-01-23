@@ -1,17 +1,23 @@
 from llm_engine import ask_llm
 
 def analyze_error(logs: str):
-    prompt = f"""
-You are a DevOps CI/CD expert.
-Analyze the following GitHub Actions error logs.
-Explain the root cause briefly and suggest a fix.
+    
+    analysis_prompt = f"""
+You are a senior DevOps engineer.
+Analyze these GitHub Actions logs and explain the root cause briefly.
+
+LOGS:
+{logs}
+"""
+    fix_prompt = f"""
+Generate a valid git diff patch to fix the CI failure.
+Only output the diff.
 
 LOGS:
 {logs}
 """
 
-    response = ask_llm(prompt)
+    analysis = ask_llm(analysis_prompt)
+    patch = ask_llm(fix_prompt)
 
-    return {
-        "analysis": response
-    }
+    return analysis, patch

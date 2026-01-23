@@ -3,3 +3,7 @@ requests
 PyGithub
 torch
 transformers
+accelerate
+fastapi
+uvicorn
+# python-dotenv
