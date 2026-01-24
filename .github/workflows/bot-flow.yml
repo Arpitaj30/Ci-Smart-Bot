@@ -1,18 +1,16 @@
-name: AI CI Bot
+name: Bot Sanity Check
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
-  workflow_dispatch:
 
 jobs:
-  run-ci-bot:
+  sanity:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -25,9 +23,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run AI CI Bot
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+      - name: Import check
         run: |
-          python bot/server.py
+          python -c "from bot.app import app; print('Bot app import OK')"
