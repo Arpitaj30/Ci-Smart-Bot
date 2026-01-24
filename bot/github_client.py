@@ -1,4 +1,5 @@
 import os
+from pdb import run
 from github import Github, GithubIntegration
 from typing import Optional
 
@@ -23,6 +24,13 @@ class GitHubClient:
             return self.integration.get_repo(repo_full_name, installation_id)
         return self.github.get_repo(repo_full_name)
     
+    def get_pr_from_run(self, repo_name, run_id, installation_id):
+        repo = self.get_repo(repo_name, installation_id)
+        run = repo.get_workflow_run(run_id)
+        prs = run.pull_requests
+        return prs[0].number if prs else None
+
+    
     def comment_on_pr(self, repo_name: str, pr_number: int, message: str, installation_id: Optional[int] = None):
         """Post comment on PR"""
         repo = self.get_repo(repo_name, installation_id)
@@ -34,3 +42,4 @@ class GitHubClient:
         repo = self.get_repo(repo_name, installation_id)
         run = repo.get_workflow_run(run_id)
         return run.raw_data.get("conclusion", "unknown")
+        # return run.get_logs().decode("utf-8")
