@@ -1,32 +1,32 @@
-@echo off
-REM Setup and run the CI/CD Bot on Windows
+@REM @echo off
+@REM REM Setup and run the CI/CD Bot on Windows
 
-echo Setting up AI CI/CD Fix Bot...
+@REM echo Setting up AI CI/CD Fix Bot...
 
-REM Activate virtual environment if it exists
-if exist "myenv\Scripts\activate.bat" (
-    call myenv\Scripts\activate.bat
-    echo ✓ Virtual environment activated
-)
+@REM REM Activate virtual environment if it exists
+@REM if exist "myenv\Scripts\activate.bat" (
+@REM     call myenv\Scripts\activate.bat
+@REM     echo ✓ Virtual environment activated
+@REM )
 
-REM Install dependencies
-echo Installing dependencies...
-pip install -q -r requirements.txt
-echo ✓ Dependencies installed
+@REM REM Install dependencies
+@REM echo Installing dependencies...
+@REM pip install -q -r requirements.txt
+@REM echo ✓ Dependencies installed
 
-REM Check if environment file exists
-if not exist ".env" (
-    echo ⚠ .env file not found. Creating from .env.example...
-    copy .env.example .env
-    echo Please configure your .env file with GitHub App and LLM credentials
-    exit /b 1
-)
+@REM REM Check if environment file exists
+@REM if not exist ".env" (
+@REM     echo ⚠ .env file not found. Creating from .env.example...
+@REM     copy .env.example .env
+@REM     echo Please configure your .env file with GitHub App and LLM credentials
+@REM     exit /b 1
+@REM )
 
-REM Run the application
-echo.
-echo Starting CI/CD Bot on http://0.0.0.0:8000
-echo Health check: http://localhost:8000/health
-echo Webhook endpoint: http://localhost:8000/github/webhook
-echo.
+@REM REM Run the application
+@REM echo.
+@REM echo Starting CI/CD Bot on http://0.0.0.0:8000
+@REM echo Health check: http://localhost:8000/health
+@REM echo Webhook endpoint: http://localhost:8000/github/webhook
+@REM echo.
 
-uvicorn bot.app:app --host 0.0.0.0 --port 8000 --reload
+@REM uvicorn bot.app:app --host 0.0.0.0 --port 8000 --reload

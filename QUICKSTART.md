@@ -1,4 +1,4 @@
-# Quick Start Guide
+<!-- # Quick Start Guide
 
 Get your AI CI/CD Fix Bot running in 5 minutes! 🚀
 
@@ -130,4 +130,4 @@ Need help? Check:
 - `README.md` - Full documentation  
 - GitHub App documentation - https://docs.github.com/en/apps
 
-Enjoy your automated CI/CD fixer! 🎉
+Enjoy your automated CI/CD fixer! 🎉 -->

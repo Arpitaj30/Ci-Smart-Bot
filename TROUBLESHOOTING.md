@@ -1,4 +1,4 @@
-# Troubleshooting Guide
+<!-- # Troubleshooting Guide
 
 ## Common Issues and Solutions
 
@@ -161,4 +161,4 @@ LOG_LEVEL=DEBUG uvicorn bot.app:app --host 0.0.0.0 --port 8000 --log-level debug
    ├── main.py
    ├── requirements.txt
    └── .env
-   ```
+   ``` -->

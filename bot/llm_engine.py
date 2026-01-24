@@ -6,8 +6,8 @@ logger = logging.getLogger(__name__)
 
 class LLMEngine:
     def __init__(self):
-        self.provider = os.getenv("LLM_PROVIDER", "groq")  # groq, openai, local
-        self.api_key = os.getenv(f"{self.provider.upper()}_API_KEY")
+        self.provider = os.getenv("LLM_PROVIDER", "groq")  
+        self.api_key = os.getenv(f"{self.provider.upper()}_GROQ_API_KEY")
         self.model = os.getenv("LLM_MODEL", "llama3-70b-8192" if self.provider == "groq" else "gpt-4")
     
     def ask(self, prompt: str) -> str:
