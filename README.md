@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI CI/CD Fix Bot
 
 An intelligent bot that automatically analyzes and fixes CI/CD pipeline failures across multiple GitHub repositories using GitHub App integration.
@@ -186,3 +187,6 @@ pydantic         # Data validation
 - [ ] Performance metrics tracking
 - [ ] Integration tests
 - [ ] Deployment documentation
+=======
+# Ci-Smart-Agent
+>>>>>>> 6e3960e73fec299e46ffaf7b1984aa7efa3d4200
