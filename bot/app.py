@@ -1,8 +1,9 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse
 import logging
-
-from .bot_runner import handle_github_event
+from bot.bot_runner import handle_github_event
+import hmac, hashlib, os
+# from .bot_runner import handle_github_event
 from .logging_config import setup_logging
 
 # Setup logging
@@ -10,6 +11,12 @@ setup_logging()
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AI CI Fix Bot")
+
+GITHUB_WEBHOOK_SECRET = os.getenv("CI AGENT")
+
+# def verify_signature(payload_body, signature):
+#     mac = hmac.new(GITHUB_WEBHOOK_SECRET.encode(), msg=payload_body, digestmod=hashlib.sha256)
+#     return hmac.compare_digest(f"sha256={mac.hexdigest()}", signature)
 
 @app.get("/health")
 def health():
@@ -76,3 +83,27 @@ async def github_webhook(request: Request):
                 "message": "Internal server error"
             }
         )
+    
+
+# bot/app.py
+# from fastapi import FastAPI, Request, Header
+# from bot.bot_runner import handle_github_event
+# import hmac, hashlib, os
+
+# app = FastAPI()
+
+# GITHUB_WEBHOOK_SECRET = os.getenv("GITHUB_WEBHOOK_SECRET")
+
+# def verify_signature(payload_body, signature):
+#     mac = hmac.new(GITHUB_WEBHOOK_SECRET.encode(), msg=payload_body, digestmod=hashlib.sha256)
+#     return hmac.compare_digest(f"sha256={mac.hexdigest()}", signature)
+
+# @app.post("/github/webhook")
+# async def github_webhook(request: Request, x_hub_signature_256: str = Header(None)):
+#     body = await request.body()
+#     if not verify_signature(body, x_hub_signature_256):
+#         return {"status": "invalid signature"}
+#     event = await request.json()
+#     # Forward event to bot_runner for processing
+#     await handle_github_event(event)
+#     return {"status": "received"}

@@ -7,11 +7,7 @@ __pycache__/
 *.pyc
 
 # Virtual Environments
-myenv/
-venv/
 env/
-ENV/
-.venv
 
 # IDE
 .vscode/
@@ -61,3 +57,7 @@ Thumbs.db
 *.temp
 temp/
 tmp/
+
+secrets/
+*.pem
+.env

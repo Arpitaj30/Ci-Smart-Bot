@@ -11,7 +11,7 @@ fi
 
 # Install dependencies
 echo "Installing dependencies..."
-pip install -q -r requirements.txt
+python3 -m pip install -r requirements.txt
 echo "✓ Dependencies installed"
 
 # Check if environment file exists
@@ -28,4 +28,4 @@ echo "Health check: http://localhost:8000/health"
 echo "Webhook endpoint: http://localhost:8000/github/webhook"
 echo ""
 
-uvicorn bot.app:app --host 0.0.0.0 --port 8000 --reload
+python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000

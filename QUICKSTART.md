@@ -18,6 +18,7 @@ cd BOT_AGENT_CICD
 # Activate virtual environment (if exists)
 # Windows:
 myenv\Scripts\activate
+
 # Linux/Mac:
 source myenv/bin/activate
 

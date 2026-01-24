@@ -1,12 +1,16 @@
 import os
-from github import Github
+from github import Github, GithubIntegration
 from typing import Optional
+
+GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")
+GITHUB_PRIVATE_KEY = os.getenv("GITHUB_PRIVATE_KEY")
+
 
 class GitHubClient:
     def __init__(self, app_id: str = None, private_key: str = None, token: str = None):
         """Initialize GitHub client with App or token"""
         if app_id and private_key:
-            from github import GithubIntegration
+            
             self.integration = GithubIntegration(int(app_id), private_key)
             self.github = None
         else:
