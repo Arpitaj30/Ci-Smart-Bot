@@ -127,7 +127,8 @@ class BotRunner:
     def __init__(self):
         self.client = GitHubClient(
             app_id=os.getenv("GITHUB_APP_ID"),
-            private_key=os.getenv("GITHUB_PRIVATE_KEY")
+            private_key=os.getenv("GITHUB_PRIVATE_KEY"),
+            GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
         )
 
     async def handle_github_event(self, event_type: str, payload: dict):
