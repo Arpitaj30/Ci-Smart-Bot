@@ -115,7 +115,7 @@ Returns: `{"status": "running"}`
 
 ### GitHub Webhook
 ```
-POST /github/webhook
+POST /webhook
 ```
 Accepts GitHub webhook events for:
 - `workflow_run` - CI workflow completion

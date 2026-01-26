@@ -6,12 +6,12 @@ from .logging_config import setup_logging
 
 # Setup logging
 setup_logging()
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)       # Get a logger for this module, method called here from logging_config.py
 
 app = FastAPI(title="AI CI Fix Bot")
 
 
-@app.get("/health")
+@app.get("/health")       #it is decorator by fastAPI GitHub Actions, ngrok testing, Docker, Kubernetes - to check if server is alive
 def health():
     return {"status": "running"}
 
@@ -20,9 +20,9 @@ def health():
 def root():
     return {
         "status": "running",
-        "endpoints": {
+        "endpoints": {                #endpoint is url+http method where another system can send a request and your server listens and reacts.
             "health": "/health",
-            "webhook": "/github/webhook",
+            "webhook": "/webhook",
             "docs": "/docs"
         }
     }
@@ -34,7 +34,7 @@ async def github_webhook(request: Request):
     GitHub webhook endpoint (NO signature verification)
     """
     try:
-        event = request.headers.get("X-GitHub-Event")
+        event = request.headers.get("X-GitHub-Event")      # X-GitHub-Event: Get the event type from headers ie workflow run, push, pull_request, check_run
 
         try:
             payload = await request.json()
