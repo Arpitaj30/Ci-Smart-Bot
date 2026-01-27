@@ -60,3 +60,7 @@ class GitHubClient:
     def merge_pr(self, repo, pr_number, installation_id):
         pr = self.get_repo(repo, installation_id).get_pull(pr_number)
         pr.merge(merge_method="squash")
+
+    def get_installation_token(self, installation_id: int) -> str:
+        token = self.integration.get_access_token(installation_id)
+        return token.token
