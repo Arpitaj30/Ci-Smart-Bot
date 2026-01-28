@@ -26,3 +26,10 @@ jobs:
       - name: Import check
         run: |
           python -c "from bot.app import app; print('Bot app import OK')"
+
+      - name: Run error analysis
+        env:
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        LLM_MODEL: "llama3-8b-8192"
+        working-directory: ./crime_detection_sys
+        run: python -c "from bot.error_analyzer import analyze_error; print(analyze_error(open('../logs/ci_logs.txt').read()))"
