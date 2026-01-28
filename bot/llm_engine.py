@@ -11,7 +11,7 @@ class LLMEngine:
         if not self.api_key:
             raise RuntimeError("GROQ_API_KEY is missing")
 
-        self.model = os.getenv("LLM_MODEL", "llama3-8b-8192")
+        self.model = os.getenv("LLM_MODEL", "llama-3.1-8b-instant")
         self.endpoint = "https://api.groq.com/openai/v1/chat/completions"
 
     def ask(self, prompt: str) -> str:
