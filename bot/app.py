@@ -1,6 +1,11 @@
+import os
+from unittest import result
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 import logging
+from dotenv import load_dotenv
+load_dotenv()
+
 
 from bot.bot_runner import BotRunner
 from .logging_config import setup_logging
@@ -74,13 +79,32 @@ async def analyze_ci_failure(request: Request):
             f"Analyze request: repo={payload['repo']} run_id={payload['run_id']}"
         )
 
-        # 👇 route into SAME bot brain
-        await runner.handle_github_event(
-            "ci_failure",
-            payload
-        )
+        # ✅ ADD THIS: logs handling
+      
+        logs_text = payload["logs"]
 
-        return {"status": "processing_started"}
+        if not logs_text.strip():
+            logger.warning("Received empty CI logs")
+
+        # Optional: persist logs for debugging / replay
+        os.makedirs("logs", exist_ok=True)
+        log_file = f"logs/{payload['repo'].replace('/', '_')}_{payload['run_id']}.log"
+
+        with open(log_file, "w", encoding="utf-8") as f:
+            f.write(logs_text)
+
+        logger.info(f"CI logs saved to {log_file}")
+
+        # 👇 route into SAME bot brain
+        result = await runner.handle_github_event(
+        "ci_failure",
+        payload
+    )
+
+        return {
+        "status": "completed",
+        "suggestion": result.get("suggestion", "")
+    }
 
     except Exception:
         logger.error("Analyze endpoint failed", exc_info=True)
