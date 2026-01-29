@@ -33,3 +33,47 @@ jobs:
         LLM_MODEL: "llama-3.1-8b-instant"
         working-directory: ./crime_detection_sys
         run: python -c "from bot.error_analyzer import analyze_error; print(analyze_error(open('../logs/ci_logs.txt').read()))"
+
+
+
+name: CI Bot Analyzer
+
+# Trigger on push or pull_request in any repo
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  analyze-ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up Python
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      # 3️⃣ Install dependencies
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # 4️⃣ Run bot to analyze CI logs and create PR if fix is available
+      - name: Run BotRunner
+        env:
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          GITHUB_APP_ID: ${{ secrets.GITHUB_APP_ID }}
+          GITHUB_PRIVATE_KEY: ${{ secrets.GITHUB_PRIVATE_KEY }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          # Optional: path to CI logs if you save them in repo
+          CI_LOGS_PATH: "./logs/ci_logs.txt"
+        run: python ./bot_run.py

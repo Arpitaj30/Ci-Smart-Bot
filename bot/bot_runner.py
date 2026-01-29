@@ -4,9 +4,7 @@ import subprocess
 import tempfile
 import asyncio
 import json
-from unittest import result
 
-from bot.error_analyzer import analyze_error
 from bot.fixer import apply_patch, commit_and_push
 from bot.github_client import GitHubClient
 from bot.llm_engine import ask_llm
@@ -22,14 +20,19 @@ class BotRunner:
         )
 
     async def handle_github_event(self, event_type: str, payload: dict):
+        """
+        Handles different GitHub webhook events dynamically.
+        """
         result = None
         try:
             if event_type == "workflow_run":
                 if payload.get("workflow_run", {}).get("conclusion") == "failure":
-                    # Fetch logs dynamically using GitHubClient
                     repo = payload["repository"]["full_name"]
+                    
+                    # Fetch logs dynamically using GitHubClient
                     run_id = payload["workflow_run"]["id"]
                     installation_id = payload["installation"]["id"]
+
                     logs = await self.client.get_workflow_run_logs(repo, run_id, installation_id)
 
                     result = await self.analyze_and_fix(
@@ -44,7 +47,7 @@ class BotRunner:
                     repo=payload["repo"],
                     run_id=payload["run_id"],
                     installation_id=payload["installation_id"],
-                    logs=payload["logs"],
+                    logs=payload.get("logs"),
                 )
 
             elif event_type == "pull_request_review":
@@ -63,45 +66,43 @@ class BotRunner:
             logger.error("BotRunner failed", exc_info=True)
             return f"CI analysis failed due to internal error: {str(e)}"
 
-
-    async def analyze_and_fix(self, repo, run_id, installation_id, logs):
+    async def analyze_and_fix(self, repo, run_id, installation_id, logs=None):
+        """
+        Analyze CI logs with LLM and apply automatic fixes.
+        """
         logger.info(f"Analyzing CI failure for {repo} run {run_id}")
 
-        # Ask LLM to analyze logs and suggest a fix
-        # Wrap synchronous ask_llm in asyncio.to_thread to not block event loop
+        # If logs not provided, fetch dynamically from GitHub
+        if not logs:
+            logs = await self.client.get_workflow_run_logs(repo, run_id, installation_id)
+
+        # Ask LLM asynchronously (wrap synchronous call)
         llm_response = await asyncio.to_thread(ask_llm, logs)
 
-        # Parse structured JSON
-        result = json.loads(llm_response)
-        analysis = result.get("analysis", "")
-        patch = result.get("patch", "")
-
-        # Expect LLM to return combined string with analysis + patch suggestion
-        # If you want structured output, you can parse it here
-        # For now, let's split patch from analysis using a separator (optional)
-        # Example: assume LLM returns "---PATCH---" before git diff
-        # if "---PATCH---" in analysis_result:
-        #     analysis, patch = analysis_result.split("---PATCH---", 1)
-        # else:
-        #     analysis = analysis_result
-        #     patch = ""
+        # Parse structured JSON from LLM
+        try:
+            result = json.loads(llm_response)
+            analysis = result.get("analysis", "")
+            patch = result.get("patch", "")
+        except Exception:
+            analysis = llm_response
+            patch = ""
 
         if not patch or "diff --git" not in patch:
-            logger.error("Invalid or empty patch from LLM")
+            logger.warning("LLM returned no valid patch")
             return analysis
 
+        # Create temp working directory
         repo_name = repo.split("/")[-1]
         workdir = tempfile.mkdtemp()
         os.chdir(workdir)
 
+        # Get installation token
         token = self.client.get_installation_token(installation_id)
 
+        # Clone repo
         # subprocess.run(
-        #     [
-        #         "git",
-        #         "clone",
-        #         f"https://x-access-token:{token}@github.com/{repo}.git",
-        #     ],
+        #     ["git", "clone", f"https://x-access-token:{token}@github.com/{repo}.git"],
         #     check=True,
         # )
 
@@ -109,12 +110,17 @@ class BotRunner:
         branch = f"ci-fix-{run_id}"
         subprocess.run(["git", "checkout", "-b", branch], check=True)
 
+        # Apply patch
         if not apply_patch(patch):
+            logger.error("Failed to apply patch")
             return analysis
 
+        # Commit and push
         if not commit_and_push():
+            logger.error("Failed to commit and push patch")
             return analysis
 
+        # Create PR
         pr = self.client.create_pull_request(
             repo=repo,
             head=branch,
@@ -124,6 +130,7 @@ class BotRunner:
             installation_id=installation_id,
         )
 
+        # Comment on PR
         self.client.comment_on_pr(
             repo,
             pr.number,
