@@ -24,15 +24,28 @@ class LLMEngine:
                 },
                 json={
                     "model": self.model,
-                    "messages": [{"role": "user", "content": prompt}],
+                    "messages": [
+                        {"role": "system", "content": "You are a CI assistant. Return JSON with 'analysis' and 'patch' fields."},
+                        {"role": "user", "content": prompt}
+                    ],
                     "temperature": 0.2,
-                    "max_tokens": 500,
+                    "max_tokens": 1000,
                 },
                 timeout=30,
             )
 
             r.raise_for_status()
             return r.json()["choices"][0]["message"]["content"].strip()
+
+            # Validate JSON
+            try:
+                result = json.loads(content)
+                if "analysis" not in result or "patch" not in result:
+                    raise ValueError("LLM response missing required fields")
+                return json.dumps(result)
+            except Exception:
+                # If LLM returned invalid JSON, fallback to plain text analysis
+                return json.dumps({"analysis": content, "patch": ""})
 
         except Exception:
             logger.error("Groq LLM call failed", exc_info=True)
@@ -61,5 +74,3 @@ _engine = LLMEngine()
 
 def ask_llm(prompt: str) -> str:
     return _engine.ask(prompt)
-
-
