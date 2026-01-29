@@ -60,7 +60,7 @@ async def github_webhook(request: Request):
 
 # ----------------- CI analyze (manual / Actions) -----------------
 @app.post("/analyze")
-async def analyze_ci_failure(request: Request):
+async def analyze(request: Request):
     """
     Called manually or by GitHub Actions
     """

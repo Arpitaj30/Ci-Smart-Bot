@@ -89,6 +89,7 @@ import os
 import logging
 import subprocess
 import tempfile
+from unittest import result
 
 from bot.error_analyzer import analyze_error
 from bot.fixer import apply_patch, commit_and_push
@@ -115,12 +116,12 @@ class BotRunner:
                     )
 
             elif event_type == "ci_failure":
-                await self.analyze_and_fix(
-                    repo=payload["repo"],
-                    run_id=payload["run_id"],
-                    installation_id=payload["installation_id"],
-                    logs=payload["logs"],
-                )
+                result = await self.analyze_and_fix(
+                repo=payload["repo"],
+                run_id=payload["run_id"],
+                installation_id=payload["installation_id"],
+                logs=payload["logs"],
+            )
 
             elif event_type == "pull_request_review":
                 if payload["review"]["state"] == "approved":
@@ -130,17 +131,24 @@ class BotRunner:
                         payload["installation_id"],
                     )
 
-        except Exception:
+            return {
+                "suggestion": result or "No automated fix could be generated."
+            }
+
+        except Exception as e:
             logger.error("BotRunner failed", exc_info=True)
+            return f"CI analysis failed due to internal error: {str(e)}"
 
+
+    
     async def analyze_and_fix(self, repo, run_id, installation_id, logs):
-        logger.info(f"Analyzing CI failure for {repo} run {run_id}")
-
         analysis, patch = analyze_error(logs)
+        result_text = analysis
+        logger.info(f"Analyzing CI failure for {repo} run {run_id}")
 
         if not patch or "diff --git" not in patch:
             logger.error("Invalid or empty patch from LLM")
-            return
+            return result_text
 
         repo_name = repo.split("/")[-1]
         workdir = tempfile.mkdtemp()
